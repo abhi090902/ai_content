@@ -202,7 +202,7 @@ if api_key:
         st.pyplot(fig)
 
 
-         if st.button("Analyze"):
+        if st.button("Analyze"):
             df_filtered_low_rating = df_filtered[df_filtered['vSp Rating'] <= 4]
             df_filtered_high_rating = df_filtered[df_filtered['vSp Rating'] == 5]  # Isolate 5 ratings in date range
             results = pd.DataFrame()

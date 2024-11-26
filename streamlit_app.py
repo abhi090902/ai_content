@@ -229,7 +229,7 @@ if api_key:
             summary_data = {
                 "Total Reviews": [len(df_filtered)],
                 "Correct Reviews": [correct_reviews],
-                "Unjustified Reviews": [unjustified_reviews], 
+                "Unjustified Reviews": [unjustified_reviews_count], 
                 "Overrated Reviews": [len(df_combined[(df_combined['justification'].str.contains('should have been', na=False)) & (df_combined['output_rating'] < df_combined['vSp Rating'])])],
                 "Underrated Reviews": [len(df_combined[(df_combined['justification'].str.contains('should have been', na=False)) & (df_combined['output_rating'] > df_combined['vSp Rating'])])]
             }

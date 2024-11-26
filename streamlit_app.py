@@ -209,41 +209,22 @@ if api_key:
             for start in range(0, len(df_filtered_low_rating), BATCH_SIZE):
                 batch = df_filtered_low_rating.iloc[start:start + BATCH_SIZE]
                 results = pd.concat([results, process_batch(batch)], ignore_index=True)
-        
+
             df_combined = pd.concat([results, df[df['vSp Rating'] > 4]], ignore_index=True)
-        
-            # Convert 'vSp Rating' and 'output_rating' columns to numeric type
-            df_combined['vSp Rating'] = pd.to_numeric(df_combined['vSp Rating'], errors='coerce')
-            df_combined['output_rating'] = pd.to_numeric(df_combined['output_rating'], errors='coerce')
-        
-            # Optionally drop rows where conversions resulted in NaN values, if necessary
-            df_combined.dropna(subset=['output_rating', 'vSp Rating'], inplace=True)
-            
-            # Calculate the count of justified low ratings and correct reviews
+
             justified_low_ratings = results[results['justification'] == 'justified']
             correct_reviews = len(justified_low_ratings) + rating_counts.get(5.0, 0)
-        
-            # Calculate overrated and underrated reviews
-            overrated_reviews_count = len(df_combined[
-                (df_combined['justification'].str.contains('should have been', na=False)) &
-                (df_combined['output_rating'] < df_combined['vSp Rating'])
-            ])
-        
-            underrated_reviews_count = len(df_combined[
-                (df_combined['justification'].str.contains('should have been', na=False)) &
-                (df_combined['output_rating'] > df_combined['vSp Rating'])
-            ])
-        
+
             # Display overall summary
             summary_data = {
                 "Total Reviews": [len(df_filtered)],
                 "Correct Reviews": [correct_reviews],
-                "Overrated Reviews": [overrated_reviews_count],
-                "Underrated Reviews": [underrated_reviews_count]
+                "Overrated Reviews": [len(df_combined[(df_combined['justification'].str.contains('should have been', na=False)) & (df_combined['output_rating'] < df_combined['vSp Rating'])])],
+                "Underrated Reviews": [len(df_combined[(df_combined['justification'].str.contains('should have been', na=False)) & (df_combined['output_rating'] > df_combined['vSp Rating'])])]
             }
             st.write("Overall Summary")
             st.table(pd.DataFrame(summary_data))
-        
+
             # Allow downloading the results
             st.write("Download the Analysis csv with justification and explanation")
             output = StringIO()

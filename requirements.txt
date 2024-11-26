@@ -3,3 +3,4 @@ pandas
 openai
 crewai
 matplotlib
+chromadb==0.3.21

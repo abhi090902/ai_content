@@ -149,7 +149,7 @@ if api_key:
                   print(f"Parsing failed or missing keys in response for AI content: {ai_content}. Retrying...")
               print("Retrying analysis...")
               attempts += 1
-          return new_rating, justification, explanation
+          return rating , justification = "NA", explanation = "Not analysed"
 
     def process_batch(batch):
         output = batch.apply(analyze_and_validate, axis=1, result_type='expand')

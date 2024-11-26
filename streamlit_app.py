@@ -12,8 +12,8 @@ import re
 st.title("AI Content Rating Analysis")
 
 # Add input for OpenAI API key
-env:
-  OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+
+OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
 if api_key:
     openai.api_key = api_key

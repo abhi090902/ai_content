@@ -202,30 +202,36 @@ if api_key:
         st.pyplot(fig)
 
 
-        if st.button("Analyze"):
+         if st.button("Analyze"):
             df_filtered_low_rating = df_filtered[df_filtered['vSp Rating'] <= 4]
+            df_filtered_high_rating = df_filtered[df_filtered['vSp Rating'] == 5]  # Isolate 5 ratings in date range
             results = pd.DataFrame()
+    
             BATCH_SIZE = 10
             for start in range(0, len(df_filtered_low_rating), BATCH_SIZE):
                 batch = df_filtered_low_rating.iloc[start:start + BATCH_SIZE]
                 results = pd.concat([results, process_batch(batch)], ignore_index=True)
-
-            df_combined = pd.concat([results, df[df['vSp Rating'] > 4]], ignore_index=True)
-
+    
+            # Combine only the date-filtered high ratings
+            df_combined = pd.concat([results, df_filtered_high_rating], ignore_index=True)
+    
             justified_low_ratings = results[results['justification'] == 'justified']
-            correct_reviews = len(justified_low_ratings) + rating_counts.get(5.0, 0)
+            correct_reviews = len(justified_low_ratings) + len(df_filtered_high_rating)
 
-            # Display overall summary
+            unjustified_reviews = len(df_combined) - correct_reviews
+    
+            # Overall summary
             summary_data = {
                 "Total Reviews": [len(df_filtered)],
                 "Correct Reviews": [correct_reviews],
+                "Unjustified Reviews": [unjustified_reviews], 
                 "Overrated Reviews": [len(df_combined[(df_combined['justification'].str.contains('should have been', na=False)) & (df_combined['output_rating'] < df_combined['vSp Rating'])])],
                 "Underrated Reviews": [len(df_combined[(df_combined['justification'].str.contains('should have been', na=False)) & (df_combined['output_rating'] > df_combined['vSp Rating'])])]
             }
             st.write("Overall Summary")
             st.table(pd.DataFrame(summary_data))
-
-            # Allow downloading the results
+    
+            # Download results
             st.write("Download the Analysis csv with justification and explanation")
             output = StringIO()
             df_combined.to_csv(output, index=False)

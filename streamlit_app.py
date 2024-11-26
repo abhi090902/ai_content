@@ -17,7 +17,7 @@ api_key = st.text_input("Enter your OpenAI API key", type="password")
 if api_key:
     openai.api_key = api_key
     os.environ['OPENAI_API_KEY'] = openai.api_key
-    os.environ["OPENAI_MODEL_NAME"] = 'gpt-4o'
+    os.environ["OPENAI_MODEL_NAME"] = 'o1-mini'
 
     # Define Agents
     content_analyzer = Agent(

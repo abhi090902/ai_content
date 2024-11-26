@@ -219,6 +219,8 @@ if api_key:
             correct_reviews = len(justified_low_ratings) + len(df_filtered_high_rating)
 
             unjustified_reviews = results[results['justification'] == 'unjustified']
+            if unjustified_reviews == None:
+                unjustified_reviews = 0
     
             # Overall summary
             summary_data = {

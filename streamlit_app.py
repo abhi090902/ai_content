@@ -97,7 +97,7 @@ if api_key:
           prompt = row['Prompt']
           Agentic_learning = ""
           if not isinstance(vsp_content, str) or not vsp_content.strip():
-              return "NA", "unjustified", "no vsp edited content for analysis"
+              return rating, "unjustified", "no vsp edited content for analysis"
           attempts = 0
           while attempts < 10:
               inputs = {

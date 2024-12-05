@@ -170,7 +170,7 @@ if api_key:
         st.write("**Note:** Only choose either one or two days for analysis.")  # Add note below start date
 
         # Limit the selection of end_date to one day after the start date
-        possible_end_dates = pd.date_range(start=start_date, periods=2).tolist()
+        possible_end_dates = pd.date_range(start=start_date, periods=3).tolist()
         end_date = st.date_input("End Date", value=possible_end_dates[0], min_value=possible_end_dates[0], max_value=possible_end_dates[-1])
 
         start_date = datetime.combine(start_date, datetime.min.time())

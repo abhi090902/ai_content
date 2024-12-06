@@ -13,8 +13,9 @@ st.title("AI Content Rating Analysis")
 
 # Add input for OpenAI API key
 
-api_key = st.text_input("Enter your OpenAI API key", type="password")
+#api_key = st.text_input("Enter your OpenAI API key", type="password")
 #OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+api_key = api_key
 
 if api_key:
     openai.api_key = api_key

@@ -3,15 +3,13 @@ import pandas as pd
 from datetime import datetime, timedelta
 import streamlit as st
 import matplotlib.pyplot as plt
+from io import StringIO
 
-# Initialize session state for pop-up visibility
+# Initialize session state for the pop-up visibility
 if 'show_popup' not in st.session_state:
     st.session_state.show_popup = False
-
-# Reset parameters
-def reset():
-    for key in st.session_state.keys():
-        st.session_state[key] = False
+if "email" not in st.session_state:
+    st.session_state.email = ""
 
 # Function to load local CSV file
 def load_local_csv(file_path):
@@ -22,17 +20,22 @@ def load_local_csv(file_path):
         st.error(f"Error loading CSV: {e}")
         return None
 
+# Reset email field and hide popup
+def reset():
+    st.session_state.email = ""
+    st.session_state.show_popup = False
+
 # Streamlit UI
 st.title("AI Content Rating Analysis")
 
-# Load and handle CSV data
-csv_file_path = "dataset.csv"  # Update this to the correct file path
+# Load and Handle CSV Data
+csv_file_path = "dataset.csv"  # Use your actual CSV file here
 
 df = load_local_csv(csv_file_path)
-if df is not None and not st.session_state.show_popup:
+if df is not None:
     df['Date'] = pd.to_datetime(df['Date'], format='%b %d %Y', errors='coerce')
 
-    # Date selection
+    # Date Selection
     start_date_input = st.date_input("Start Date", value=df['Date'].min().date())
     end_date_input = st.date_input("End Date", value=(df['Date'].min() + timedelta(days=1)).date())
 
@@ -59,12 +62,71 @@ if df is not None and not st.session_state.show_popup:
     st.pyplot(fig)
 
     # Email input
-    email = st.text_input("Enter your email to receive the report")
+    email = st.text_input("Enter your email to receive the report", value=st.session_state.email)
 
     if email:
-        if st.button("Analyze"):
+        # Increase the size and color of the Analyze button
+        analyze_button = st.button("Analyze")
+        st.markdown(
+            """
+            <style>
+            div.stButton > button {
+                background-color: #4CAF50;  /* Green */
+                color: white;
+                height: 50px;
+                width: 150px;  /* Bigger width */
+                font-size: 18px;  /* Larger font size */
+            }
+            </style>
+            """, unsafe_allow_html=True
+        )
+
+        if analyze_button:
             # Trigger pop-up immediately after clicking analyze
             st.session_state.show_popup = True
+            
+            df_filtered_low_rating = df_filtered[df_filtered['vSp Rating'] <= 4]
+            df_filtered_high_rating = df_filtered[df_filtered['vSp Rating'] == 5]
+            results = pd.DataFrame()
+
+            # Batch Processing
+            BATCH_SIZE = 10
+            for start in range(0, len(df_filtered_low_rating), BATCH_SIZE):
+                batch = df_filtered_low_rating.iloc[start:start + BATCH_SIZE]
+                # Placeholder process_batch function call
+                # Replace this with your business logic
+                results = pd.concat([results, batch], ignore_index=True)
+
+            df_combined = pd.concat([results, df_filtered_high_rating], ignore_index=True)
+
+            justified_low_ratings = results[results['justification'] == 'justified']
+            correct_reviews = len(justified_low_ratings) + len(df_filtered_high_rating)
+
+            unjustified_reviews = results[results['justification'] == 'unjustified']
+            unjustified_reviews_count = len(unjustified_reviews) if not unjustified_reviews.empty else 0
+
+            # Overall summary
+            summary_data = {
+                "Total Reviews": [len(df_filtered)],
+                "Correct Reviews": [correct_reviews],
+                "Unjustified Reviews": [unjustified_reviews_count],
+                "Overrated Reviews": [len(df_combined[(df_combined['justification'].str.contains('should have been', na=False)) & (df_combined['output_rating'] < df_combined['vSp Rating'])])],
+                "Underrated Reviews": [len(df_combined[(df_combined['justification'].str.contains('should have been', na=False)) & (df_combined['output_rating'] > df_combined['vSp Rating'])])]
+            }
+            st.write("Overall Summary")
+            st.table(pd.DataFrame(summary_data))
+
+            # Download results
+            st.write("Download the Analysis csv with justification and explanation")
+            output = StringIO()
+            df_combined.to_csv(output, index=False)
+            st.download_button(
+                label="Download Results as CSV",
+                data=output.getvalue(),
+                file_name='analysis_results.csv',
+                mime='text/csv',
+                on_click=reset  # Reset upon download
+            )
     else:
         st.warning("Please enter an email address to proceed.")
 
@@ -78,10 +140,11 @@ if st.session_state.show_popup:
             <h3>Report Generation in Progress</h3>
             <p>We will send the report CSV to your email address once the generation is completed. 
             Meanwhile, you can generate a new report or close this page.</p>
+            <button onclick="window.location.reload();" style="background-color: #4CAF50; 
+            color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">
+            OK</button>
         </div>
         """, unsafe_allow_html=True
     )
-    
-    # Add an 'OK' button within the Streamlit interface to reset
     if st.button("OK"):
         reset()

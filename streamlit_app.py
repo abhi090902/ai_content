@@ -4,12 +4,9 @@ from datetime import datetime, timedelta
 import streamlit as st
 import matplotlib.pyplot as plt
 
-# Initialize session state for the pop-up visibility and email input
+# Initialize session state for the pop-up visibility
 if 'show_popup' not in st.session_state:
     st.session_state.show_popup = False
-
-if 'email' not in st.session_state:
-    st.session_state.email = ''
 
 # Function to load local CSV file
 def load_local_csv(file_path):
@@ -24,21 +21,21 @@ def load_local_csv(file_path):
 st.title("AI Content Rating Analysis")
 
 # Load and Handle CSV Data
-csv_file_path = "dataset.csv"  # Replace with your actual CSV file or path
+csv_file_path = "dataset.csv"  # Replace with your actual CSV file
 df = load_local_csv(csv_file_path)
 
 if df is not None:
     df['Date'] = pd.to_datetime(df['Date'], format='%b %d %Y', errors='coerce')
-    
+
     # Date Selection
     start_date_input = st.date_input("Start Date", value=df['Date'].min().date())
-    end_date_input = st.date_input("End Date", value=(df['Date'].max()).date())
+    end_date_input = st.date_input("End Date", value=(df['Date'].min() + timedelta(days=1)).date())
 
     start_date = pd.to_datetime(start_date_input)
     end_date = pd.to_datetime(end_date_input)
 
     # Display selected date range
-    st.markdown(f"**Selected Date Range:** {start_date.strftime('%Y-%m-%d')} to {end_date.strftime('%Y-%m-%d')}")
+    st.markdown(f"**Selected Date Range:** {start_date} to {end_date}")
 
     # Filter DataFrame by the date range
     df_filtered = df[(df['Date'] >= start_date) & (df['Date'] <= end_date)].copy()
@@ -49,7 +46,7 @@ if df is not None:
     bars = ax.bar(rating_counts.index, rating_counts.values, color='skyblue')
     for bar in bars:
         height = bar.get_height()
-        ax.text(bar.get_x() + bar.get_width() / 2, height, f'{int(height)}', ha='center', va='bottom', fontsize=10)
+        ax.text(bar.get_x() + bar.get_width() / 2, height, f'{height}', ha='center', va='bottom', fontsize=10)
 
     ax.set_xlabel('vSp Rating')
     ax.set_ylabel('Count')
@@ -57,9 +54,9 @@ if df is not None:
     st.pyplot(fig)
 
     # Email input
-    st.session_state.email = st.text_input("Enter your email to receive the report", value=st.session_state.email)
-    if st.session_state.email:
-        # Style for bigger Analyze button
+    email = st.text_input("Enter your email to receive the report")
+    if email:
+        analyze_button = st.button("Analyze")
         st.markdown(
             """
             <style>
@@ -73,20 +70,34 @@ if df is not None:
             </style>
             """, unsafe_allow_html=True
         )
-        analyze_button = st.button("Analyze")
+
         if analyze_button:
             st.session_state.show_popup = True  # Show the pop-up
 
 # Render pop-up
-if st.session_state.get('show_popup', False):
-    # Using st.modal (available in Streamlit versions >= 1.22)
-    with st.modal("Report Generation in Progress"):
-        st.write("""
-            We will send the report CSV to your email address once the generation is completed.
-            Meanwhile, you can generate a new report or close this page.
-        """)
-        ok_button = st.button("OK")
-        if ok_button:
-            st.session_state.show_popup = False  # Hide the pop-up
-            st.session_state.email = ''  # Reset the email input
-            st.experimental_rerun()  # Rerun the app to update the UI
+if st.session_state.show_popup:
+    st.markdown(
+        """
+        <div id="popup" style="position: fixed; top: 20%; left: 50%; transform: translateX(-50%);
+        background-color: rgba(0, 0, 0, 0.8); padding: 20px; color: white; border-radius: 10px;
+        width: 80%; text-align: center; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); z-index: 1;">
+            <h3>Report Generation in Progress</h3>
+            <p>We will send the report CSV to your email address once the generation is completed. 
+            Meanwhile, you can generate a new report or close this page.</p>
+            <button id="ok-button" style="background-color: #4CAF50; 
+            color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">
+            OK</button>
+        </div>
+        <script>
+        document.getElementById("ok-button").onclick = function() {
+            const popup = document.getElementById("popup");
+            popup.style.display = "none";
+            fetch('/streamlit/run-component', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 'show_popup': false })
+            });
+        };
+        </script>
+        """, unsafe_allow_html=True
+    )

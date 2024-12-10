@@ -3,14 +3,15 @@ import pandas as pd
 from datetime import datetime, timedelta
 import streamlit as st
 import matplotlib.pyplot as plt
-from io import StringIO
 
-# Initialize session state for the pop-up visibility
+# Initialize session state for pop-up visibility
 if 'show_popup' not in st.session_state:
     st.session_state.show_popup = False
 
-if "email" not in st.session_state:
-    st.session_state.email = ""
+# Reset parameters
+def reset():
+    st.session_state.clear()
+    st.session_state.show_popup = False
 
 # Function to load local CSV file
 def load_local_csv(file_path):
@@ -21,10 +22,8 @@ def load_local_csv(file_path):
         st.error(f"Error loading CSV: {e}")
         return None
 
-# Simulate sending email (as a placeholder)
-def send_email_with_attachment(to_email, subject, body, attachment=None):
-    # Placeholder for email sending logic
-    pass
+# Streamlit UI
+st.title("AI Content Rating Analysis")
 
 # Load and Handle CSV Data
 csv_file_path = "dataset.csv"  # Use your actual CSV file here
@@ -37,7 +36,6 @@ if df is not None and not st.session_state.show_popup:
     start_date_input = st.date_input("Start Date", value=df['Date'].min().date())
     end_date_input = st.date_input("End Date", value=(df['Date'].min() + timedelta(days=1)).date())
 
-    # Convert to datetime64[ns] type
     start_date = pd.to_datetime(start_date_input)
     end_date = pd.to_datetime(end_date_input)
 
@@ -80,16 +78,9 @@ if st.session_state.show_popup:
             <h3>Report Generation in Progress</h3>
             <p>We will send the report CSV to your email address once the generation is completed. 
             Meanwhile, you can generate a new report or close this page.</p>
-            <form action="?reset=true" method="POST">
-                <button style="background-color: #4CAF50; color: white; padding: 10px 20px; 
-                border: none; border-radius: 5px; cursor: pointer;">OK</button>
-            </form>
         </div>
         """, unsafe_allow_html=True
     )
-
-    # Reset logic triggered by the form post
-    if st.experimental_data_editor.query_params.get("reset"):
-        for key in st.session_state.keys():
-            st.session_state[key] = False
-        st.session_state.email = ""
+    
+    if st.button("OK"):
+        reset()

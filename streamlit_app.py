@@ -14,7 +14,11 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.application import MIMEApplication
 
 # Ensure OpenAI API key is set
-openai.api_key = os.getenv('OPENAI_API_KEY', 'your_default_api_key')
+#openai.api_key = os.getenv('OPENAI_API_KEY', 'your_default_api_key')
+#os.environ["OPENAI_MODEL_NAME"] = 'gpt-4o'
+api_key = st.text_input("Enter your OpenAI API key", type="password")
+openai.api_key = api_key
+os.environ['OPENAI_API_KEY'] = openai.api_key
 os.environ["OPENAI_MODEL_NAME"] = 'gpt-4o'
 
 # Function to load local CSV file

@@ -208,50 +208,6 @@ if df is not None:
             # Trigger pop-up immediately after clicking analyze
             st.session_state.show_popup = True
 
-            # Simulation of analysis process
-            df_filtered_low_rating = df_filtered[df_filtered['vSp Rating'] <= 4]
-            df_filtered_high_rating = df_filtered[df_filtered['vSp Rating'] == 5]
-            results = pd.DataFrame()
-
-            # Batch Processing
-            BATCH_SIZE = 10
-            for start in range(0, len(df_filtered_low_rating), BATCH_SIZE):
-                batch = df_filtered_low_rating.iloc[start:start + BATCH_SIZE]
-                results = pd.concat([results, process_batch(batch)], ignore_index=True)
-
-            df_combined = pd.concat([results, df_filtered_high_rating], ignore_index=True)
-
-            justified_low_ratings = results[results['justification'] == 'justified']
-            correct_reviews = len(justified_low_ratings) + len(df_filtered_high_rating)
-
-            unjustified_reviews = results[results['justification'] == 'unjustified']
-            unjustified_reviews_count = len(unjustified_reviews) if not unjustified_reviews.empty else 0
-
-            # Overall Summary
-            summary_data = {
-                "Total Reviews": [len(df_filtered)],
-                "Correct Reviews": [correct_reviews],
-                "Unjustified Reviews": [unjustified_reviews_count],
-                "Overrated Reviews": [len(df_combined[(df_combined['justification'].str.contains('should have been', na=False)) & (df_combined['output_rating'] < df_combined['vSp Rating'])])],
-                "Underrated Reviews": [len(df_combined[(df_combined['justification'].str.contains('should have been', na=False)) & (df_combined['output_rating'] > df_combined['vSp Rating'])])]
-            }
-            st.write("Overall Summary")
-            st.table(pd.DataFrame(summary_data))
-
-            # Download results
-            st.write("Download the Analysis csv with justification and explanation")
-            output = StringIO()
-            df_combined.to_csv(output, index=False)
-
-            # Send the email with the CSV attachment
-            send_email_with_attachment(email, "Your Report of AI Content Rating Analysis", 'Here is your analysis report.', attachment=output)
-            
-            st.download_button(
-                label="Download Results as CSV",
-                data=output.getvalue(),
-                file_name='analysis_results.csv',
-                mime='text/csv'
-            )
     else:
         st.warning("Please enter an email address to proceed.")
 

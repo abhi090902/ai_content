@@ -41,7 +41,7 @@ def send_email_with_attachment(to_email, subject, body, attachment=None):
 st.title("AI Content Rating Analysis")
 
 # Load CSV file
-csv_file_path = "RM LIVE_RM - Oct To Nov_Table.csv"  # Use your actual CSV file here
+csv_file_path = "dataset.csv"  # Use your actual CSV file here
 df = pd.read_csv(csv_file_path)
 df['Date'] = pd.to_datetime(df['Date'], format='%b %d %Y')
 

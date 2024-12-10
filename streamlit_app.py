@@ -63,108 +63,108 @@ if "email" not in st.session_state:
 # Streamlit UI
 st.title("AI Content Rating Analysis")
 
-# Define Agents
-content_analyzer = Agent(
-    role="Human Content Analyzer Expert",
-    goal="Analyze AI-generated and user-accepted content, and determine the rating justification.",
-    backstory="You are a content expert tasked with validating the ratings of AI-generated content.",
-    allow_delegation=False,
-    verbose=True
-)
+# # Define Agents
+# content_analyzer = Agent(
+#     role="Human Content Analyzer Expert",
+#     goal="Analyze AI-generated and user-accepted content, and determine the rating justification.",
+#     backstory="You are a content expert tasked with validating the ratings of AI-generated content.",
+#     allow_delegation=False,
+#     verbose=True
+# )
 
-# Define Tasks
-def create_analyze_content_task(review_text_present):
-    description = (
-        "Correctly Analyze the AI-generated content and the user-accepted content and properly utilize the data provided to determine if the rating provided is justified."
-    )
-    return Task(
-        description=description,
-        expected_output='A comprehensive analysis of the content and a rating validation.',
-        agent=content_analyzer,
-        config={"Rating": "int", "justification": "str", "explanation": "str"}
-    )
+# # Define Tasks
+# def create_analyze_content_task(review_text_present):
+#     description = (
+#         "Correctly Analyze the AI-generated content and the user-accepted content and properly utilize the data provided to determine if the rating provided is justified."
+#     )
+#     return Task(
+#         description=description,
+#         expected_output='A comprehensive analysis of the content and a rating validation.',
+#         agent=content_analyzer,
+#         config={"Rating": "int", "justification": "str", "explanation": "str"}
+#     )
 
-# Define Crew
-crew = Crew(
-    agents=[content_analyzer],
-    tasks=[],
-    verbose=True,
-    memory=True
-)
+# # Define Crew
+# crew = Crew(
+#     agents=[content_analyzer],
+#     tasks=[],
+#     verbose=True,
+#     memory=True
+# )
 
-def analyze_and_validate(row):
-    ai_content = row['AI Content']
-    vsp_content = row['vSp edited content']
-    rating = row['vSp Rating']
-    review_text = row['Review Text']
-    prompt = row['Prompt']
-    Agentic_learning = ""
-    if not isinstance(vsp_content, str) or not vsp_content.strip():
-        return rating, "unjustified", "no vsp edited content for analysis"
+# def analyze_and_validate(row):
+#     ai_content = row['AI Content']
+#     vsp_content = row['vSp edited content']
+#     rating = row['vSp Rating']
+#     review_text = row['Review Text']
+#     prompt = row['Prompt']
+#     Agentic_learning = ""
+#     if not isinstance(vsp_content, str) or not vsp_content.strip():
+#         return rating, "unjustified", "no vsp edited content for analysis"
     
-    attempts = 0
-    while attempts < 10:
-        inputs = {
-            "ai_content": ai_content,
-            "vsp_content": vsp_content,
-            "rating": rating,
-            "review_text": review_text,
-            "prompt": prompt,
-            "Agentic_learning": Agentic_learning
-        }
-        review_text_present = isinstance(review_text, str) and bool(review_text.strip())
-        crew.tasks = [
-            create_analyze_content_task(review_text_present)
-        ]
-        pattern = re.compile(r'should have been (\d+)')
-        result = crew.kickoff(inputs=inputs)
-        result_content = str(result)
-        Agentic_learning += f"\n In your attempt {attempts + 1} Discrepancy detected in your response: {result_content}\n"
-        try:
-            start_idx = result_content.find('{')
-            end_idx = result_content.find('}') + 1
-            json_str = result_content[start_idx:end_idx].strip()
-            output = json.loads(json_str)
-            new_rating = output.get('Rating')
-            justification = output.get('justification', '').lower()
-            explanation = output.get('explanation')
-            suggested_rating_match = pattern.search(justification)
-            suggested_rating = int(suggested_rating_match.group(1)) if suggested_rating_match else None
+#     attempts = 0
+#     while attempts < 10:
+#         inputs = {
+#             "ai_content": ai_content,
+#             "vsp_content": vsp_content,
+#             "rating": rating,
+#             "review_text": review_text,
+#             "prompt": prompt,
+#             "Agentic_learning": Agentic_learning
+#         }
+#         review_text_present = isinstance(review_text, str) and bool(review_text.strip())
+#         crew.tasks = [
+#             create_analyze_content_task(review_text_present)
+#         ]
+#         pattern = re.compile(r'should have been (\d+)')
+#         result = crew.kickoff(inputs=inputs)
+#         result_content = str(result)
+#         Agentic_learning += f"\n In your attempt {attempts + 1} Discrepancy detected in your response: {result_content}\n"
+#         try:
+#             start_idx = result_content.find('{')
+#             end_idx = result_content.find('}') + 1
+#             json_str = result_content[start_idx:end_idx].strip()
+#             output = json.loads(json_str)
+#             new_rating = output.get('Rating')
+#             justification = output.get('justification', '').lower()
+#             explanation = output.get('explanation')
+#             suggested_rating_match = pattern.search(justification)
+#             suggested_rating = int(suggested_rating_match.group(1)) if suggested_rating_match else None
             
-            if suggested_rating is not None:
-                return suggested_rating, justification, explanation
+#             if suggested_rating is not None:
+#                 return suggested_rating, justification, explanation
             
-            if isinstance(new_rating, str):
-                try:
-                    new_rating = int(new_rating)
-                except ValueError:
-                    st.warning(f"Cannot convert new_rating '{new_rating}' to an integer. Re-analyzing...")
-                    attempts += 1
-                    continue
+#             if isinstance(new_rating, str):
+#                 try:
+#                     new_rating = int(new_rating)
+#                 except ValueError:
+#                     st.warning(f"Cannot convert new_rating '{new_rating}' to an integer. Re-analyzing...")
+#                     attempts += 1
+#                     continue
             
-            if new_rating is None or justification == "" or explanation is None:
-                st.warning(f"Missing fields detected for row with AI content: {ai_content}. Re-analyzing...")
-                attempts += 1
-                continue
+#             if new_rating is None or justification == "" or explanation is None:
+#                 st.warning(f"Missing fields detected for row with AI content: {ai_content}. Re-analyzing...")
+#                 attempts += 1
+#                 continue
             
-            if new_rating != rating and justification == "justified":
-                st.warning(f"Discrepancy detected in justification for row with AI content: {ai_content}. Re-analyzing...")
-                attempts += 1
-                continue
+#             if new_rating != rating and justification == "justified":
+#                 st.warning(f"Discrepancy detected in justification for row with AI content: {ai_content}. Re-analyzing...")
+#                 attempts += 1
+#                 continue
             
-            return new_rating, justification, explanation
+#             return new_rating, justification, explanation
         
-        except (json.JSONDecodeError, KeyError, TypeError):
-            st.warning(f"Parsing failed or missing keys in response for AI content: {ai_content}. Retrying...")
+#         except (json.JSONDecodeError, KeyError, TypeError):
+#             st.warning(f"Parsing failed or missing keys in response for AI content: {ai_content}. Retrying...")
         
-        attempts += 1
+#         attempts += 1
     
-    return rating, "NA", "Not analysed"
+#     return rating, "NA", "Not analysed"
 
-def process_batch(batch):
-    output = batch.apply(analyze_and_validate, axis=1, result_type='expand')
-    batch[['output_rating', 'justification', 'explanation']] = output
-    return batch
+# def process_batch(batch):
+#     output = batch.apply(analyze_and_validate, axis=1, result_type='expand')
+#     batch[['output_rating', 'justification', 'explanation']] = output
+#     return batch
 
 # Load and Handle CSV Data
 csv_file_path = "dataset.csv"  # Use your actual CSV file here

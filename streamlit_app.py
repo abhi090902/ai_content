@@ -204,7 +204,7 @@ if api_key:
         st.error("CSV file not found. Please ensure the file exists.")
 
     if df is not None:
-        df['Date'] = pd.to_datetime(df['Date'], format='%b %d %Y')
+        df['Date'] = pd.to_datetime(df['Date'], format='%b %d %Y', errors='coerce')
 
         # Date Selection
         start_date = st.date_input("Start Date", value=df['Date'].min())

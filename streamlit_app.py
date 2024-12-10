@@ -14,7 +14,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.application import MIMEApplication
 
 # Ensure OpenAI API key is set
-api_key = " "
+api_key = st.text_input("Enter your OpenAI API key", type="password")
 openai.api_key = api_key
 os.environ['OPENAI_API_KEY'] = openai.api_key
 os.environ["OPENAI_MODEL_NAME"] = 'gpt-4o'

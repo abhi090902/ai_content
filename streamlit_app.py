@@ -42,7 +42,7 @@ st.title("AI Content Rating Analysis")
 
 # Load CSV file
 csv_file_path = "RM LIVE_RM - Oct To Nov_Table.csv"  # Use your actual CSV file here
-df = load_local_csv(csv_file_path)
+df = pd.read_csv(csv_file_path)
 df['Date'] = pd.to_datetime(df['Date'], format='%b %d %Y')
 
 # Date Selection

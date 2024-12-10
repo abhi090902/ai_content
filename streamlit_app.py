@@ -12,9 +12,6 @@ if 'show_popup' not in st.session_state:
 if "email" not in st.session_state:
     st.session_state.email = ""
 
-if "reset" not in st.session_state:
-    st.session_state.reset = False
-
 # Function to load local CSV file
 def load_local_csv(file_path):
     try:
@@ -24,25 +21,22 @@ def load_local_csv(file_path):
         st.error(f"Error loading CSV: {e}")
         return None
 
-# Function to send email with CSV attachment and text summary (just a placeholder here)
+# Simulate sending email (as a placeholder)
 def send_email_with_attachment(to_email, subject, body, attachment=None):
     # Placeholder for email sending logic
     pass
-
-# Streamlit UI
-st.title("AI Content Rating Analysis")
 
 # Load and Handle CSV Data
 csv_file_path = "dataset.csv"  # Use your actual CSV file here
 
 df = load_local_csv(csv_file_path)
-if df is not None and not st.session_state.reset:
+if df is not None and not st.session_state.show_popup:
     df['Date'] = pd.to_datetime(df['Date'], format='%b %d %Y', errors='coerce')
 
     # Date Selection
     start_date_input = st.date_input("Start Date", value=df['Date'].min().date())
     end_date_input = st.date_input("End Date", value=(df['Date'].min() + timedelta(days=1)).date())
-    
+
     # Convert to datetime64[ns] type
     start_date = pd.to_datetime(start_date_input)
     end_date = pd.to_datetime(end_date_input)
@@ -73,25 +67,29 @@ if df is not None and not st.session_state.reset:
         if st.button("Analyze"):
             # Trigger pop-up immediately after clicking analyze
             st.session_state.show_popup = True
-            st.session_state.reset = False
     else:
         st.warning("Please enter an email address to proceed.")
 
 # Simulate the pop-up
 if st.session_state.show_popup:
-    if st.button("OK to Reset") and st.session_state.show_popup:
-        # Reset the session state
+    st.markdown(
+        """
+        <div style="position: fixed; top: 20%; left: 50%; transform: translateX(-50%);
+        background-color: rgba(0, 0, 0, 0.8); padding: 20px; color: white; border-radius: 10px;
+        width: 80%; text-align: center; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); z-index: 1;">
+            <h3>Report Generation in Progress</h3>
+            <p>We will send the report CSV to your email address once the generation is completed. 
+            Meanwhile, you can generate a new report or close this page.</p>
+            <form action="?reset=true" method="POST">
+                <button style="background-color: #4CAF50; color: white; padding: 10px 20px; 
+                border: none; border-radius: 5px; cursor: pointer;">OK</button>
+            </form>
+        </div>
+        """, unsafe_allow_html=True
+    )
+
+    # Reset logic triggered by the form post
+    if st.experimental_data_editor.query_params.get("reset"):
         for key in st.session_state.keys():
             st.session_state[key] = False
-    else:
-        st.markdown(
-            """
-            <div style="position: fixed; top: 20%; left: 50%; transform: translateX(-50%);
-            background-color: rgba(0, 0, 0, 0.8); padding: 20px; color: white; border-radius: 10px;
-            width: 80%; text-align: center; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); z-index: 1;">
-                <h3>Report Generation in Progress</h3>
-                <p>We will send the report CSV to your email address once the generation is completed. 
-                Meanwhile, you can generate a new report or close this page.</p>
-            </div>
-            """, unsafe_allow_html=True
-        )
+        st.session_state.email = ""

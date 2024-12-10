@@ -78,17 +78,26 @@ if df is not None:
 if st.session_state.show_popup:
     st.markdown(
         """
-        <div style="position: fixed; top: 20%; left: 50%; transform: translateX(-50%);
+        <div id="popup" style="position: fixed; top: 20%; left: 50%; transform: translateX(-50%);
         background-color: rgba(0, 0, 0, 0.8); padding: 20px; color: white; border-radius: 10px;
         width: 80%; text-align: center; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); z-index: 1;">
             <h3>Report Generation in Progress</h3>
             <p>We will send the report CSV to your email address once the generation is completed. 
             Meanwhile, you can generate a new report or close this page.</p>
-            <button onclick="window.location.reload();" style="background-color: #4CAF50; 
+            <button id="ok-button" style="background-color: #4CAF50; 
             color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">
             OK</button>
         </div>
+        <script>
+        document.getElementById("ok-button").onclick = function() {
+            const popup = document.getElementById("popup");
+            popup.style.display = "none";
+            fetch('/streamlit/run-component', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 'show_popup': false })
+            });
+        };
+        </script>
         """, unsafe_allow_html=True
     )
-    if st.button("Close Pop-Up"):
-        st.session_state.show_popup = False  # Hide the pop-up

@@ -3,13 +3,10 @@ import pandas as pd
 from datetime import datetime, timedelta
 import streamlit as st
 import matplotlib.pyplot as plt
-from io import StringIO
 
 # Initialize session state for the pop-up visibility
 if 'show_popup' not in st.session_state:
     st.session_state.show_popup = False
-if "email" not in st.session_state:
-    st.session_state.email = ""
 
 # Function to load local CSV file
 def load_local_csv(file_path):
@@ -20,18 +17,13 @@ def load_local_csv(file_path):
         st.error(f"Error loading CSV: {e}")
         return None
 
-# Reset email field and hide popup
-def reset():
-    st.session_state.email = ""
-    st.session_state.show_popup = False
-
 # Streamlit UI
 st.title("AI Content Rating Analysis")
 
 # Load and Handle CSV Data
-csv_file_path = "dataset.csv"  # Use your actual CSV file here
-
+csv_file_path = "dataset.csv"  # Replace with your actual CSV file
 df = load_local_csv(csv_file_path)
+
 if df is not None:
     df['Date'] = pd.to_datetime(df['Date'], format='%b %d %Y', errors='coerce')
 
@@ -62,10 +54,8 @@ if df is not None:
     st.pyplot(fig)
 
     # Email input
-    email = st.text_input("Enter your email to receive the report", value=st.session_state.email)
-
+    email = st.text_input("Enter your email to receive the report")
     if email:
-        # Increase the size and color of the Analyze button
         analyze_button = st.button("Analyze")
         st.markdown(
             """
@@ -82,55 +72,9 @@ if df is not None:
         )
 
         if analyze_button:
-            # Trigger pop-up immediately after clicking analyze
-            st.session_state.show_popup = True
-            
-            # df_filtered_low_rating = df_filtered[df_filtered['vSp Rating'] <= 4]
-            # df_filtered_high_rating = df_filtered[df_filtered['vSp Rating'] == 5]
-            # results = pd.DataFrame()
+            st.session_state.show_popup = True  # Show the pop-up
 
-            # # Batch Processing
-            # BATCH_SIZE = 10
-            # for start in range(0, len(df_filtered_low_rating), BATCH_SIZE):
-            #     batch = df_filtered_low_rating.iloc[start:start + BATCH_SIZE]
-            #     # Placeholder process_batch function call
-            #     # Replace this with your business logic
-            #     results = pd.concat([results, batch], ignore_index=True)
-
-            # df_combined = pd.concat([results, df_filtered_high_rating], ignore_index=True)
-
-            # justified_low_ratings = results[results['justification'] == 'justified']
-            # correct_reviews = len(justified_low_ratings) + len(df_filtered_high_rating)
-
-            # unjustified_reviews = results[results['justification'] == 'unjustified']
-            # unjustified_reviews_count = len(unjustified_reviews) if not unjustified_reviews.empty else 0
-
-            # # Overall summary
-            # summary_data = {
-            #     "Total Reviews": [len(df_filtered)],
-            #     "Correct Reviews": [correct_reviews],
-            #     "Unjustified Reviews": [unjustified_reviews_count],
-            #     "Overrated Reviews": [len(df_combined[(df_combined['justification'].str.contains('should have been', na=False)) & (df_combined['output_rating'] < df_combined['vSp Rating'])])],
-            #     "Underrated Reviews": [len(df_combined[(df_combined['justification'].str.contains('should have been', na=False)) & (df_combined['output_rating'] > df_combined['vSp Rating'])])]
-            # }
-            # st.write("Overall Summary")
-            # st.table(pd.DataFrame(summary_data))
-
-            # # Download results
-            # st.write("Download the Analysis csv with justification and explanation")
-            # output = StringIO()
-            # df_combined.to_csv(output, index=False)
-            # st.download_button(
-            #     label="Download Results as CSV",
-            #     data=output.getvalue(),
-            #     file_name='analysis_results.csv',
-            #     mime='text/csv',
-            #     on_click=reset  # Reset upon download
-            # )
-    else:
-        st.warning("Please enter an email address to proceed.")
-
-# Simulate the pop-up
+# Render pop-up
 if st.session_state.show_popup:
     st.markdown(
         """
@@ -146,5 +90,5 @@ if st.session_state.show_popup:
         </div>
         """, unsafe_allow_html=True
     )
-    if st.button("OK"):
-        on_click=reset
+    if st.button("Close Pop-Up"):
+        st.session_state.show_popup = False  # Hide the pop-up

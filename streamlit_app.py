@@ -10,8 +10,8 @@ if 'show_popup' not in st.session_state:
 
 # Reset parameters
 def reset():
-    st.session_state.clear()
-    st.session_state.show_popup = False
+    for key in st.session_state.keys():
+        st.session_state[key] = False
 
 # Function to load local CSV file
 def load_local_csv(file_path):
@@ -25,14 +25,14 @@ def load_local_csv(file_path):
 # Streamlit UI
 st.title("AI Content Rating Analysis")
 
-# Load and Handle CSV Data
-csv_file_path = "dataset.csv"  # Use your actual CSV file here
+# Load and handle CSV data
+csv_file_path = "dataset.csv"  # Update this to the correct file path
 
 df = load_local_csv(csv_file_path)
 if df is not None and not st.session_state.show_popup:
     df['Date'] = pd.to_datetime(df['Date'], format='%b %d %Y', errors='coerce')
 
-    # Date Selection
+    # Date selection
     start_date_input = st.date_input("Start Date", value=df['Date'].min().date())
     end_date_input = st.date_input("End Date", value=(df['Date'].min() + timedelta(days=1)).date())
 
@@ -82,5 +82,6 @@ if st.session_state.show_popup:
         """, unsafe_allow_html=True
     )
     
+    # Add an 'OK' button within the Streamlit interface to reset
     if st.button("OK"):
         reset()

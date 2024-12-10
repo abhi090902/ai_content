@@ -207,8 +207,12 @@ if api_key:
         df['Date'] = pd.to_datetime(df['Date'], format='%b %d %Y', errors='coerce')
 
         # Date Selection
-        start_date = st.date_input("Start Date", value=df['Date'].min())
-        end_date = st.date_input("End Date", value=df['Date'].min() + timedelta(days=1))  # default to one day range
+        start_date_input = st.date_input("Start Date", value=df['Date'].min().date())
+        end_date_input = st.date_input("End Date", value=(df['Date'].min() + timedelta(days=1)).date())
+        
+        # Convert to datetime64[ns] type
+        start_date = pd.to_datetime(start_date_input)
+        end_date = pd.to_datetime(end_date_input)  # default to one day range
 
         # Display selected date range
         st.markdown(f"**Selected Date Range:** {start_date} to {end_date}")

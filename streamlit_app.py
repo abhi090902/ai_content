@@ -15,9 +15,9 @@ from email.mime.application import MIMEApplication
 
 # Ensure OpenAI API key is set
 api_key = ""
-openai.api_key = api_key
-os.environ['OPENAI_API_KEY'] = openai.api_key
-os.environ["OPENAI_MODEL_NAME"] = 'gpt-4o'
+# openai.api_key = api_key
+# os.environ['OPENAI_API_KEY'] = openai.api_key
+# os.environ["OPENAI_MODEL_NAME"] = 'gpt-4o'
 
 # Function to load local CSV file
 def load_local_csv(file_path):
